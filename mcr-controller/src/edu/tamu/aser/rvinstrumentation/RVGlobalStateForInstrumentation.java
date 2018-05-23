@@ -218,6 +218,7 @@ public class RVGlobalStateForInstrumentation {
 	      return sid;
 	}
 
+	//按照继承链向上查找看是否继承了Thread类
     public boolean isThreadClass(String cname) {
         while (!cname.equals(OBJECT_CLASS_NAME)) {
             if (cname.equals(THREAD_CLASS_NAME))
