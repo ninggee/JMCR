@@ -5,7 +5,6 @@
 	<classpathentry kind="lib" path="lib/jcommander-1.36.jar"/>
 	<classpathentry kind="lib" path="lib/h2-rvpredict.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="var" path="ECLIPSE_HOME"/>
 	<classpathentry kind="lib" path="lib/jigsaw-sexpr.jar"/>
 	<classpathentry kind="lib" path="lib/joana.api.jar"/>
 	<classpathentry kind="lib" path="lib/joana.ifc.sdg.core.jar"/>

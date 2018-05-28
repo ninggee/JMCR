@@ -12,7 +12,6 @@
 	<classpathentry kind="lib" path="lib/concurrent.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/derby-10.3.2.1"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jigsaw"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/weblech"/>
-	<classpathentry kind="lib" path="/Users/Alan/GitHub/public_repos/JMCR/lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/mcr-controller/lib/log4j-1.2.15.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

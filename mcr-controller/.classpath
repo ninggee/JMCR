@@ -7,6 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/guava-21.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mcr-engine"/>
-	<classpathentry kind="lib" path="/Users/Alan/GitHub/public_repos/JMCR/lib/asm.jar"/>
+	<classpathentry kind="lib" path="lib/asm.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
