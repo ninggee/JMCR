@@ -68,6 +68,7 @@ public class MTSetTest extends Thread {
     
     @Test
    	public void test() throws InterruptedException {
+
     	MTSetTest.main(null);
     }
 }

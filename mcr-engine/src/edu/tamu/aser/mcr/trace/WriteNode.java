@@ -36,6 +36,16 @@ public class WriteNode extends AbstractNode implements IMemNode
 	private String addr;
 	private String label;
 	
+	/**
+	 * 
+	 * @param GID global id indicate the node order in trace
+ 	 * @param tid thread id identify their thread
+	 * @param ID indicate the node location in the program 
+	 * @param addr 
+	 * @param value
+	 * @param type
+	 * @param label
+	 */
 	public WriteNode(long GID, long tid, int ID, String addr, String value, TYPE type, String label)
 	{
 		super(GID, tid, ID, type, label);

@@ -69,11 +69,13 @@ public class RVRunTime {
 		globalEventID = 0;
 	}
 
+	//初步看来这个函数在项目里没有被调用
 	/**
 	 * @Alan
 	 */
 	public static void flush(Queue<Vector<String>> q, int constTid) {
 	    
+        System.err.println("function flush be called");
         
 	    while(!q.isEmpty()){
             Vector<String> vs = q.peek();
@@ -129,6 +131,9 @@ public class RVRunTime {
        
     }
 	
+	//该方法相当于论文中的MEM_BARRIER方法
+	//仅仅当执行到超过调度前缀的时候需要强制进行memBar操作
+	//也就是清空所有的buffer（也就是保证所有的写操作被刷新到内存中）
 	public static void bufferEmpty(){
 	    /*
 	     * only when out of the schedule prefix do the flush
@@ -146,6 +151,7 @@ public class RVRunTime {
 	    
 	}
 	
+	// PSO版本的memBar，区别就是每个线程的每个变量都有一个buffer
 	public static void memBarPSO(long tid){
 	    if(tidNameMap.get(tid) != null){
             long tidName = tidNameMap.get(tid);
@@ -197,6 +203,7 @@ public class RVRunTime {
 	}
 	
 	//when a sync happens, empty the buffer
+	// 当一个同步发生的时候（实际上是内存屏障发生的时候），需要将buffer中的所有内容写入到内存中
     public static void memBar(long tid){  
         if(tidNameMap.get(tid) != null){
             long tidName = tidNameMap.get(tid);
@@ -204,17 +211,20 @@ public class RVRunTime {
             if (q != null) {
                 while(!q.isEmpty()){
                     Vector<String> vs = q.dequeue();                
-                    String owner = vs.get(0);
-                    String name = vs.get(1);
+                    String owner = vs.get(0); //变量所属的类
+                    String name = vs.get(1); //变量的名称
                   //int opcode = Integer.parseInt(vs.get(3));
                     int SID = Integer.parseInt(vs.get(3));
                   int ID  = Integer.parseInt(vs.get(2));
-                  int value = Integer.parseInt(vs.get(4));
+                  int value = Integer.parseInt(vs.get(4)); //变量的值
                   long threadId = Integer.parseInt(vs.get(5));
                   
+                  //TODO 不知道变量的值为什么都是Integer
+                  //可能这里的integer是stack的Index？但估计不是，不知道为什么
                   Object v = (Integer) value;
                   
                   try{
+                      //利用反射机制获取一个新的变量，更新这个值
                       Class<?> c = Class.forName(owner);
                       Object instance = c.newInstance();
                       //c o = new c();
@@ -222,6 +232,7 @@ public class RVRunTime {
                       f.setAccessible(true);
                       f.set(instance, v);
                       
+                      //更新文件的访问信息
                       updateFieldAcc(ID, null, SID, v, true, threadId);
                       
                   } catch (NoSuchFieldException x) {
@@ -330,6 +341,7 @@ public class RVRunTime {
     }
 
     
+    //该方法将buffer中的变量flush到内存中
     public static void updateStore(){
       //comparing the field with the SID of the variable in the head of the Queue
         
@@ -565,7 +577,11 @@ public class RVRunTime {
     }
     
     //buffer the store
+    //判断如果在前缀中，就根据内存地址判断是存写数据到buffer还是直接更新内存信息
+    //如果不在超过了前缀，就直接log这个操作
     public static void bufferStore(final Object v, String info) throws IllegalArgumentException, IllegalAccessException {
+        
+        System.out.println("buffer store: " + info);
         
         //boolean shouldBuffer = true;
         
@@ -696,6 +712,8 @@ public class RVRunTime {
     //Considering that after a read/write operation
     //we can update the store in other threads
     //this will make a mistake
+    
+    //更新文件域的访问信息，如果在调度前缀的范围内，就更新初始的writetable，如果超过的调度的范围，就把新的读写node添加到trace中
     public static void updateFieldAcc(int ID, final Object o, int SID,
             final Object v, final boolean write, long tid) {
 
@@ -703,6 +721,8 @@ public class RVRunTime {
         //Scheduler.beforeFieldAccess(!write, "owner", "name", "desc");
 
         Trace trace = MCRStrategy.getTrace();
+        
+        
         
         
 
@@ -790,6 +810,7 @@ public class RVRunTime {
 	 * @param v
 	 * @param write
 	 */
+    //类似于updateFieldAcc，除了多了一步更新failureTrace操作，不知道两者的区别，可能就是区分updateStore操作和storeBuffer操作
 	public static void logFieldAcc(int ID, final Object o, int SID, final Object v, final boolean write) {
 
 		Trace trace = MCRStrategy.getTrace();
@@ -887,6 +908,7 @@ public class RVRunTime {
 		}
 	}
 
+	//记录初始的写操作，看起来就是直接信息writetable中的内容
 	public static void logInitialWrite(int ID, final Object o, int SID, final Object v) 
 	{
 
@@ -931,12 +953,15 @@ public class RVRunTime {
 	public static void logBranch(int ID) {
 	}
 
+	//记录Thread begin操作，就是调用scheduler中的方法
 	public static void logThreadBegin()
 	{
 	    Scheduler.beginThread();	  
 	    
 	}
-    public static void logThreadEnd()
+   
+	//类似前面的方法
+	public static void logThreadEnd()
     {
         Scheduler.endThread();
     }
@@ -950,6 +975,7 @@ public class RVRunTime {
 	 * @param ID
 	 * @param o
 	 */
+	// 当一个新的线程被start，创建独立表示这个线程的id信息，并存入表中，同时如果超过了scheduler前缀，就添加事件到trace中
 	public static void logBeforeStart(int ID, final Object o) {
 
 
@@ -1033,6 +1059,7 @@ public class RVRunTime {
         }
 	}
 
+	//貌似没有被调用
 	public static void logAfterStart(int ID, final Object o) {
 		Scheduler.afterForking((Thread) o);
 
@@ -1058,6 +1085,7 @@ public class RVRunTime {
 		}
 	}
 
+	//就是调用了scheduler中的sleep方法
 	public static void logSleep()
 	{
 	       try {
@@ -1066,6 +1094,11 @@ public class RVRunTime {
 	            e.printStackTrace();
 	        }
 	}
+	
+	//调用scheduler中的join方法
+	//将操作记录到failureTrace中
+	//进行memBar操作
+	//如果超过了前缀，就记录到trace中
 	public static void logJoin(int ID, final Object o) {
 		// db.saveEventToDB(Thread.currentThread().getId(), ID, "" + ((Thread)
 		// o).getId(), "", db.tracetypetable[8]);
@@ -1113,6 +1146,10 @@ public class RVRunTime {
 	}
 
 	//the original version
+	//记录到failureTrace
+	//然后(scheduler)执行wait操作
+	//然后(scheduler)执行lock操作
+	//如果超过了前缀，就把相应的wait，lock节点添加到trace中
 	public static void logWait(int ID, final Object o) {
 	    
 //	    int wait = 0;
@@ -1174,6 +1211,9 @@ public class RVRunTime {
 		}
 	}
 
+	//执行scheduler的notify方法
+	//把事件加入到failureTrace里面
+	//把notifyNode加入到trace中
 	public static void logNotify(int ID, final Object o) {
 	    
 	    
@@ -1199,10 +1239,14 @@ public class RVRunTime {
 		}
 	}
 
+	//调用scheduler的对应方法
+	//add to trace
+	//add node to trace
 	public static void logNotifyAll(int ID, final Object o) {
 
 	    long notifiedThreadId = Scheduler.performNotifyAll(o);
 	    
+	    // add event to trace, so we can print the trace when failure happen
 	    addEventToTrace();
 
 		if (MCRStrategy.schedulePrefix.size() <= currentIndex++ || MCRStrategy.fullTrace) {
@@ -1219,6 +1263,9 @@ public class RVRunTime {
 		}
 	}
 
+	//scheduler
+	//failure-trace
+	//trace
 	public static void logStaticSyncLock(int ID, int SID) {
 
         Scheduler.performLock(getObject(SID));
@@ -1242,6 +1289,7 @@ public class RVRunTime {
 		}
 	}
 
+	//类似之前的方法
 	public static void logStaticSyncUnlock(int ID, int SID) {
 
         Scheduler.performUnlock(getObject(SID));
@@ -1325,6 +1373,7 @@ public class RVRunTime {
         }
 	}
 
+	//类似于logFieldAcc方法，不同的是，array需要多一个参数，就是array的index
 	public static void logArrayAcc(int ID, final Object o, int index,
 			final Object v, final boolean write) {
 

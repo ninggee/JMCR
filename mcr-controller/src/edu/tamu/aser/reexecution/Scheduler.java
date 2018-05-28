@@ -487,7 +487,8 @@ public class Scheduler {
         Thread.currentThread().getId();
            childThread.getId();
         
-        
+           
+        //把新的thread添加到liveThreadInfo中
         if (exploring) {
             schedulerStateLock.lock();
             try {
@@ -502,7 +503,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /** 这个方法好像没有被调用过
      * Executed after a (currently executing) parent thread forks a child thread
      * (using {@link Thread}.start).
      * 
@@ -523,6 +524,7 @@ public class Scheduler {
                 ThreadInfo currentThreadInfo = liveThreadInfos.get(Thread.currentThread());
                 if(currentThreadInfo!=null)
                 {                
+       // 增加了thread的runCount
                     currentThreadInfo.incrementRunCount();
                     currentThreadInfo.setEventDesc(new ThreadLifeEventDesc(EventType.BEGIN));
                 }
@@ -543,6 +545,7 @@ public class Scheduler {
                 ThreadInfo currentThreadInfo = liveThreadInfos.get(currentThread);
                 if(currentThreadInfo!=null)
                 {
+                    //在当前线程执行结束之后，通知所有等待该线程的线程，同时把这些线程从blockedThread中移除，把当前的线程从liveThread中移除
                     currentThreadInfo.setEventDesc(new ThreadLifeEventDesc(EventType.END));
                     int newRunCount = currentThreadInfo.decrementRunCount();
                     if (newRunCount == 0) {
@@ -680,6 +683,7 @@ public class Scheduler {
                             //System.err.println("lock held by " + liveThreadInfo.toString());
                             lockAvailable = false;
                             blockedThreadInfos.add(lockingThreadInfo);
+                            //解除掉所有等待改线程block事件而被block的事件
                             unblockThreadsBlockingForThreadBlock();
                             break;
                         }     
@@ -753,7 +757,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /** 没有发现被调用
      * Executed instead of {@link Object#wait()} invocations.
      * 
      * @param waitObject
@@ -773,7 +777,7 @@ public class Scheduler {
                 preWaitLockCount = waitingThreadInfo.getLockCount(waitObject);
                 if (preWaitLockCount < 1) {
                     throw new IllegalMonitorStateException("Calling wait without holding object lock!");
-                }
+                } 
                 waitingThreadInfo.releasedLock(waitObject, preWaitLockCount);
                 blockedThreadInfos.add(waitingThreadInfo);
                 unblockThreadsBlockingForThreadBlock();
@@ -825,6 +829,7 @@ public class Scheduler {
             try {
                 waitingThreadInfo = liveThreadInfos.get(Thread.currentThread());
                 preWaitLockCount = waitingThreadInfo.getLockCount(waitObject);
+                
                 if (preWaitLockCount < 1) {
                     throw new IllegalMonitorStateException("Calling wait without holding object lock!");
                 }

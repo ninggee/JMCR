@@ -71,12 +71,17 @@ public class ConstraintsSolving
         String[] quotes = config.smt_solver.split(" ");
         boolean inQuote = false;
         CMD = new ArrayList<>();
-        
+//        System.out.println(OS);
         if (OS.indexOf("mac") >= 0) {
         	Z3_PATH = "../z3-osx/bin/z3";
-		} else {
+		} else if (OS.indexOf("windows") >= 0) {
+			Z3_PATH = "../z3-windows/z3-4.6.0-x64-win/bin/z3.exe";
+		}
+        else {
 			Z3_PATH = "../z3-ubuntu/bin/z3";
 		}
+        
+//        System.out.println(Z3_PATH);
         
         CMD.add(Z3_PATH);
         for(String arg: quotes){

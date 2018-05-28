@@ -1,5 +1,8 @@
 package edu.tamu.aser.rvinstrumentation;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
@@ -215,11 +218,25 @@ public class RVInstrumentor {
                         {
                             System.out.println("Instrumented " + name);
                         }
+                        
+                        // output new class files after instrumenting classes
+//                        
+//                        try {
+//                            File file =  new File("D:/MCR/" + name.replace("/", "."));
+//                          
+//                            FileOutputStream fout = new FileOutputStream(file);
+//                            fout.write(bytes);
+//                            fout.close();
+//                        } catch(IOException e) {
+//                            e.printStackTrace();
+//                        }
+                        
                     }
                 } catch (Throwable th) {
                     th.printStackTrace();
                     System.err.println(th.getMessage());
-                }                             
+                }   
+                //返回插桩好的代码
                 return bytes;
             }
         }, true);

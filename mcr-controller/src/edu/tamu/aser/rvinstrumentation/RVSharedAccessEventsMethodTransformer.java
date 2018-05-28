@@ -76,10 +76,11 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
         mv.visitLineNumber(line, start);
     }
 	    
-    
+    //对线程相关的各种方法进行插桩
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
 
         String sig_loc = source + "|" + (className+"|"+methodSignature+"|"+line_cur).replace("/", ".");
+//        System.out.println(sig_loc);
         int ID  = RVGlobalStateForInstrumentation.instance.getLocationId(sig_loc);
 
         switch (opcode) {
@@ -306,7 +307,7 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
     }
     
     /**
-     * 
+     * 通知scheduler关于数组的访问信息
      * @param isBefore
      * @param isRead
      */
@@ -593,13 +594,20 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
         }
 	}
 
+	/**
+	 * visit a local variable instruction
+	 * @param opcode the opcode of the local variable instruction to be visited. This opcode is either ILOAD, LLOAD, FLOAD, DLOAD, ALOAD, ISTORE, LSTORE, FSTORE, DSTORE, ASTORE or RET.
+	 * @param var the operand of the instruction to be visited. This operand is the index of a local variable.
+	 */
 	@Override
 	public void visitVarInsn(int opcode, int var) {
+	    // 判断要访问的局部变量的index是不是大于maxindex_cur, 如果是的话，就更新maxindex_cur
 		if (var > maxindex_cur) {
 			maxindex_cur = var;
 		}
 
 		switch (opcode) {
+		//如果是load或者store long或者double类型的局部变量，就把maxindex_cur的值加一，可能是由于long和double的长度都是8个byte，其他类型都是4个byte
 		case LSTORE:
 		case DSTORE:
 		case LLOAD:
@@ -624,6 +632,11 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 		}
 	}
 
+	/**
+	 * visit an IINC instruction
+	 * @param var the index of local variable to be incremented
+	 * @param increment amount to increment the local variable by
+	 */
 	@Override
 	public void visitIincInsn(int var, int increment) {
 		if (var > maxindex_cur) {
@@ -654,11 +667,13 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
         }
         boolean arrayAccess = (arrayRead || arrayWrite);
 
-		if(arrayAccess)
-		{
+        // 如果是数组的访问，要特殊对待
+		if(arrayAccess) 
+		{ 
     		switch (opcode) {
     		case AALOAD:
     			if (!isInit) {
+    			    //复制栈顶2个数值，并压入栈顶
     				mv.visitInsn(DUP2);
     				maxindex_cur++;
     				int index1 = maxindex_cur;
@@ -728,17 +743,17 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
     				mv.visitInsn(DUP2);
     				maxindex_cur++;
     				int index1 = maxindex_cur;
-    				mv.visitVarInsn(ISTORE, index1);
+    				mv.visitVarInsn(ISTORE, index1); // array index
     				maxindex_cur++;
     				int index2 = maxindex_cur;
-    				mv.visitVarInsn(ASTORE, index2);
+    				mv.visitVarInsn(ASTORE, index2); // index of the array in local parameter tabel
                     this.informSchedulerAboutArrayAccess(true, arrayRead);
 
     				mv.visitInsn(opcode);
     				mv.visitInsn(DUP);
     				maxindex_cur++;
     				int index3 = maxindex_cur;
-    				mv.visitVarInsn(FSTORE, index3);
+    				mv.visitVarInsn(FSTORE, index3); // the float value get from the array 
 
     				addBipushInsn(mv, ID);
     				mv.visitVarInsn(ALOAD, index2);
@@ -1011,8 +1026,10 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 		}
 		else
 		{
+		   //如果不是对数组的操作
 		    switch (opcode) {
                 case MONITORENTER:
+                    //如果是进入临界区的操作
                     
                     /*
                      * membar
@@ -1025,7 +1042,7 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
                     //mv.visitInsn(DUP);
                     maxindex_cur++;
                     int index = maxindex_cur;
-                    mv.visitVarInsn(ASTORE, index);// objectref
+                    mv.visitVarInsn(ASTORE, index);// objectref 被锁的对象
                     // Comment out because of MCR lock
                     // mv.visitInsn(opcode);
                     addBipushInsn(mv, ID);
@@ -1067,6 +1084,8 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
                 case ARETURN:
                 case RETURN:
                 case ATHROW:
+                    //如果是返回或者是抛出异常操作
+                    //如果是thread的start方法之类的，就进行退出线程操作
                     onMethodExitNew();
                     mv.visitInsn(opcode);
                     break;
@@ -1079,21 +1098,30 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 
 	}
 
+	/**
+	 * Visits the end of the method. This method, which is the last one to be called, is used to inform the visitor that all the annotations and attributes of the method have been visited.
+	 */
 	@Override
 	public void visitEnd() {
 		mv.visitEnd();
 	}
 
+    // MultiNewArray 是jvm中创建数组的命令
 	@Override
 	public void visitMultiANewArrayInsn(String desc, int dims)
 	{
 	    mv.visitMultiANewArrayInsn(desc, dims);
 	}
+	
+	
 	@Override
 	public void visitJumpInsn(int opcode, Label label) {
 		String sig_loc = (className + "|" + methodSignature + "|" + line_cur).replace("/", ".");
 		int ID = RVGlobalStateForInstrumentation.instance
 				.getLocationId(sig_loc);
+		//把所有branch的位置存到表中
+		
+//		System.out.println(sig_loc);
 
 		switch (opcode) {
 		case IFEQ:// branch
@@ -1124,35 +1152,42 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 	}
 
 	protected void onMethodEnterNew() {
+	    // 如果是synchronize的方法
         if(isSynchronized)
         {
             String sig_loc = source + "|" + (className+"|"+methodSignature+"|"+line_cur).replace("/", ".");
             int ID  = RVGlobalStateForInstrumentation.instance.getLocationId(sig_loc);
-
+//            System.out.println(sig_loc + "\t id: " + ID);
             addBipushInsn(mv,ID);
 
             if(isStatic)
             {
-                //signature + line number
+                //signature + line number、
+                //静态方法，只需取出类名就可以了
                 String sig_var = (className+".0").replace("/", ".");
                 int SID = RVGlobalStateForInstrumentation.instance.getVariableId(sig_var);
+                //将类名对应的SID推入栈中
                 addBipushInsn(mv,SID);
                 mv.visitMethodInsn(INVOKESTATIC, RVInstrumentor.logClass, RVConfig.instance.LOG_LOCK_STATIC,
                         RVConfig.instance.DESC_LOG_LOCK_STATIC);
             }
             else
             {
+                //实例方法需要访问this变量的引用，将this引用取出
                 mv.visitVarInsn(ALOAD, 0); //the this objectref
+                //将RVRuntime中的方法插桩到代码中
                 mv.visitMethodInsn(INVOKESTATIC, RVInstrumentor.logClass, RVConfig.instance.LOG_LOCK_INSTANCE,
                         RVConfig.instance.DESC_LOG_LOCK_INSTANCE);
             }
         }
         
+        //如果是可能会运行的方法，就插入logThread*的方法
 		if (this.possibleRunMethod) {
 			visitThreadBeginEnd(true);
 		}
 	}
 
+	//该方法是onMethodEnterNew的镜像方法
 	protected void onMethodExitNew() {
         if(isSynchronized)
         {
@@ -1183,6 +1218,10 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 		}
 	}
 
+    //如果方法是thread.run等方法，那么就插入一段代码
+	// if (this instanceof Runnable) {
+	//   RVRuntime.logThreadBegin(); //或者是 logThreadEnd();
+	// }
     private void visitThreadBeginEnd(boolean threadBegin) {
         super.mv.visitVarInsn(Opcodes.ALOAD, 0);
         super.mv.visitTypeInsn(Opcodes.INSTANCEOF, RVGlobalStateForInstrumentation.RUNNABLE_CLASS_NAME);
@@ -1303,6 +1342,9 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 		}
 	}
 
+    // 这个方法不知道是干嘛的
+	//TODO 判断这个方法的作用
+	// 初步判断是将方法调用的id或者是域访问的id存常量表中，以供之后的方法使用
 	private void addBipushInsn(MethodVisitor mv, int val) {
 		switch (val) {
 		case 0:
@@ -1329,6 +1371,7 @@ public class RVSharedAccessEventsMethodTransformer extends AdviceAdapter impleme
 		}
 	}
 
+	//将基本变量转为响应的对象类
 	private void convertPrimitiveToObject(int opcode) {
 		switch (opcode) {
 		case IALOAD:

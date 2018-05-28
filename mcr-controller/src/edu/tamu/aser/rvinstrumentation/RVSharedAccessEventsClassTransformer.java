@@ -61,7 +61,9 @@ public class RVSharedAccessEventsClassTransformer extends ClassVisitor {
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {       
+			String signature, String[] exceptions) {     
+
+        //TODO 这一句中的访问限定符的意思没太懂
 		MethodVisitor mv = cv.visitMethod(access&(~Opcodes.ACC_SYNCHRONIZED), name, desc, signature,
 				exceptions);
 		//mv = new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions);
