@@ -1,11 +1,17 @@
 package edu.tamu.aser.mcr;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Vector;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import edu.tamu.aser.mcr.config.Configuration;
+import edu.tamu.aser.mcr.trace.AbstractNode;
 import edu.tamu.aser.mcr.trace.Trace;
 
 public class StartExploring implements Runnable {
@@ -65,7 +71,29 @@ public class StartExploring implements Runnable {
 	public void run() {
 		try {
 			ExploreSeedInterleavings.setQueue(exploreQueue);
+//			Vector<AbstractNode> rawfulltrace = traceObj.getRawFullTrace();
+//			try {
+//	            
+//	              Gson g = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+//	              
+//	              String filename = "D:\\MCR\\result.json";
+//	              FileWriter writer = new FileWriter(filename, true);
+////	              writer.write(g.toJson(rawfulltrace) + "\n");
+//	              traceObj.finishedLoading(true);
+//	              writer.write(g.toJson(traceObj) + "\n");
+//	              
+//	        //      writer.write(g.toJson(traceObj.getThreadNodesMap()) + "\n");
+//	              writer.close();
+//	          } catch (IOException e) {
+//	              e.printStackTrace();
+//	          }
+//			
+//			
+//			System.exit(0);
 			traceObj.finishedLoading(true);
+			
+			
+			
 			ExploreSeedInterleavings.execute(traceObj, schedule_prefix);
 			ExploreSeedInterleavings.memUsed += ExploreSeedInterleavings.memSize(ExploreSeedInterleavings.mapPrefixEquivalent);
 		} catch (Exception e) {

@@ -1374,7 +1374,7 @@ public class RVRunTime {
 	}
 
 	//类似于logFieldAcc方法，不同的是，array需要多一个参数，就是array的index
-	public static void logArrayAcc(int ID, final Object o, int index,
+	public static void logArrayAcc(int ID, final Object o, int index,                                                                                                                            
 			final Object v, final boolean write) {
 
 	       //Scheduler.beforeArrayAccess(!write);

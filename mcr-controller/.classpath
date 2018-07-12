@@ -8,5 +8,7 @@
 	<classpathentry kind="lib" path="lib/guava-21.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/mcr-engine"/>
 	<classpathentry kind="lib" path="lib/asm.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/mcr-test/lib/gson-2.8.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -28,6 +28,8 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * An abstract representation of an event in the trace. Each event has 
  * a global id (GID) representing their order in the trace,
@@ -47,11 +49,15 @@ public abstract class AbstractNode{
 	/**
 	 * 
 	 */
+	@Expose
 	protected long GID;
+	@Expose
 	protected int ID;
+	@Expose
 	protected long tid;
+	@Expose
 	protected TYPE type;
-	
+	@Expose
 	protected String label;
 	
 	public AbstractNode(long GID, long tid, int ID, TYPE type)

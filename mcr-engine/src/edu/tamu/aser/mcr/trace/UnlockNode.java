@@ -28,9 +28,13 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
+
 public class UnlockNode extends AbstractNode  implements ISyncNode 
 {
+	@Expose
 	private long did;//this is the ID of the event from the same thread the rwnode depends on
+	@Expose
 	private String lock_addr;
 	public UnlockNode(long GID, long tid, int ID, String addr, TYPE type)
 	{

@@ -105,11 +105,13 @@ public class ConstraintsSolving
 		    //invoke the solver
 	        exec(outFile, smtFile.getAbsolutePath());
 
-	        model = GetModel.read(outFile);
-	        
+			model = GetModel.read(outFile);
+			System.out.println("call model");
+	        System.out.println(model + " get model");
 	        if(model!=null)
 	        {
-	        	sat = true;
+				sat = true;
+				model.print();
 	        	//schedule = computeSchedule(model);
 	        }
 	        //String z3OutFileName = z3OutFile.getAbsolutePath();
@@ -178,9 +180,8 @@ public class ConstraintsSolving
 		PrintWriter smtWriter = null;
 		try{
 			smtWriter = Util.newWriter(smtFile, true);
-		  	smtWriter.println(msg);
+			smtWriter.println(msg);
 		    smtWriter.close();
-		    
 		    //invoke the solver
 	        exec(outFile, smtFile.getAbsolutePath());
 

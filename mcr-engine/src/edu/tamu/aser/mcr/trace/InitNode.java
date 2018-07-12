@@ -28,6 +28,8 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * initial write node for some memory location.
  * 
@@ -36,7 +38,9 @@ package edu.tamu.aser.mcr.trace;
  */
 public class InitNode extends AbstractNode
 {
+	@Expose
 	private String value;
+	@Expose
 	private String addr;
 	
 	public InitNode(long GID, long tid, int ID, String addr, String value, TYPE type)

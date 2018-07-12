@@ -1,5 +1,7 @@
 package edu.tamu.aser.reexecution;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,6 +14,10 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Vector;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import sun.misc.Unsafe;
 import edu.illinois.imunit.internal.parsing.BlockEvent;
@@ -26,6 +32,7 @@ import edu.tamu.aser.internaljuc.Reex_ReentrantLock;
 import edu.tamu.aser.internaljuc.Reex_Semaphore;
 import edu.tamu.aser.internaljuc.Reex_TimeUnit;
 import edu.tamu.aser.listeners.Listeners;
+import edu.tamu.aser.mcr.trace.AbstractNode;
 import edu.tamu.aser.rvinstrumentation.MCRProperties;
 import edu.tamu.aser.rvinstrumentation.RVRunTime;
 //import edu.tamu.aser.rvinstrumentation.RaceDetect;
@@ -44,6 +51,7 @@ import edu.tamu.aser.scheduling.events.WaitNotifyEventDesc;
 import edu.tamu.aser.scheduling.filtering.DefaultFilter;
 import edu.tamu.aser.scheduling.filtering.SchedulingFilter;
 import edu.tamu.aser.scheduling.strategy.ChoiceType;
+import edu.tamu.aser.scheduling.strategy.MCRStrategy;
 import edu.tamu.aser.scheduling.strategy.SchedulingStrategy;
 import edu.tamu.aser.scheduling.strategy.ThreadInfo;
 
@@ -93,6 +101,7 @@ public class Scheduler {
      */
     static {
         initState();
+        
 
         // Catch any uncaught exception thrown by any thread
         // NOTE: this can be overridden by the code under test
@@ -143,6 +152,12 @@ public class Scheduler {
                     Listeners.fireCompletedExploration();
                     System.exit(2);
                 }
+                
+               
+                
+
+                
+                        
             }
         });
 
@@ -179,8 +194,8 @@ public class Scheduler {
         } else {
             schedulingFilter = new DefaultFilter();
         }
-        
-
+       
+       
     }
     
     /**
@@ -204,8 +219,20 @@ public class Scheduler {
                                     pausedThreadInfos.size() == liveThreadInfos.size() - blockedThreadInfos.size()) {
                                 
                                 ThreadInfo chosenPausedThreadInfo = (ThreadInfo) choose(pausedThreadInfos, ChoiceType.THREAD_TO_SCHEDULE);
-                                                           
-                                //System.out.println("Choose thread info:" + chosenPausedThreadInfo.toString() );
+//                                          
+//                                try {
+//                                    MCRStrategy strategy = (MCRStrategy)Scheduler.schedulingStrategy;
+//                                    Gson g = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+//                                    
+//                                    String filename = "D:\\MCR\\result";
+//                                    FileWriter writer = new FileWriter(filename, true);
+//                                    writer.write(g.toJson(strategy.currentTrace) + "\n");
+//                                    writer.close();
+//                                } catch (IOException e) {
+//                                    e.printStackTrace();
+//                                }
+//                                
+                               // System.out.println("Choose thread info:" + chosenPausedThreadInfo.toString() );
                                 
                                 if(chosenPausedThreadInfo!=null)
                                 {
@@ -413,6 +440,24 @@ public class Scheduler {
     }
 
     public static void failureDetected(String errorMsg) {
+        if (errorMsg != null) {
+            try {
+                
+                Gson g = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+                
+                String filename = "D:\\MCR\\weblech_error.json";
+                FileWriter writer = new FileWriter(filename, true);
+//              writer.write(g.toJson(rawfulltrace) + "\n");
+                MCRStrategy.getTrace().finishedLoading(true);
+                writer.write(g.toJson( MCRStrategy.getTrace()) + "\n");
+                
+          //      writer.write(g.toJson(traceObj.getThreadNodesMap()) + "\n");
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    
         Listeners.fireFailureDetected(errorMsg, schedulingStrategy.getChoicesMadeDuringThisSchedule());
     }
 
@@ -829,7 +874,7 @@ public class Scheduler {
             try {
                 waitingThreadInfo = liveThreadInfos.get(Thread.currentThread());
                 preWaitLockCount = waitingThreadInfo.getLockCount(waitObject);
-                
+                //这段不太懂是什么意思
                 if (preWaitLockCount < 1) {
                     throw new IllegalMonitorStateException("Calling wait without holding object lock!");
                 }
@@ -842,6 +887,7 @@ public class Scheduler {
                 Set<ThreadInfo> waitObjectLockThreadInfos = new HashSet<ThreadInfo>();
                 for (ThreadInfo blockedThreadInfo : blockedThreadInfos) {
                     if (blockedThreadInfo.getEventDesc().getEventType().equals(EventType.LOCK)) {
+                        //因为前面释放了这个线程持有的锁
                         LockEventDesc lockEventDesc = (LockEventDesc) blockedThreadInfo.getEventDesc();
                         if (lockEventDesc.getLockObject() == waitObject) {
                             waitObjectLockThreadInfos.add(blockedThreadInfo);
@@ -866,7 +912,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /** 没被调用
      * Executed instead of timed {@link Object#wait()} invocations.
      * 
      * @param waitObject
@@ -884,7 +930,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /** 没被调用
      * Executed instead of timed {@link Object#wait()} invocations.
      * 
      * @param waitObject
@@ -980,6 +1026,7 @@ public class Scheduler {
                  * in order to simplify the problem, here I always take the first wait event that is to be waken up
                  */
                 
+                //看起来两个逻辑没有什么区别
                 if (notifyAll) {
 //                    blockedThreadInfos.removeAll(notifyableThreadInfos);
 //                    for (ThreadInfo threadToNotify : notifyableThreadInfos) {
@@ -1051,7 +1098,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /** 没被调用
      * Executed instead of a timed {@link Thread#join()}.
      * 
      * @param joinThread
@@ -1087,7 +1134,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /** 好像没有被调用的地方
      * Executed instead of
      * {@link sun.misc.Unsafe#park(boolean isAbsolute, long time)}. Needed to
      * implement support for j.u.c classes.
@@ -1182,7 +1229,7 @@ public class Scheduler {
         }
     }
 
-    /**
+    /**  这个好像也没有被调用
      * Updates the {@link LocationDesc} of the current {@link Thread}'s
      * {@link ThreadInfo}. Executed before any of the events listed in
      * {@link EventType}.
@@ -1296,7 +1343,7 @@ public class Scheduler {
         schedulerStateLock.unlock();
     }
 
-    /**
+    /** 这个方法也没有被调用
      * Method used to replace fireEvent in IMUnit, to put constraints for exploration
      * 
      * @param event
@@ -1364,6 +1411,7 @@ public class Scheduler {
     }
 
 
+    //取消对那些等待某个线程被阻塞事件而被阻塞的线程的阻塞
     private static void unblockThreadsBlockingForThreadBlock() {
         Set<ThreadInfo> unblock = new HashSet<ThreadInfo>();
         for (ThreadInfo blockedThreadInfo : blockedThreadInfos) {

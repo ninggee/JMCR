@@ -31,6 +31,8 @@ package edu.tamu.aser.mcr.trace;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * This class keeps the information associated with the trace such as the trace statistics,
  * shared variable signature, etc.
@@ -41,13 +43,19 @@ import java.util.HashSet;
 public class TraceInfo {
 	
 	//metadata
+	@Expose
 	HashMap<Long, String> threadIdNamemap;
+	@Expose
 	HashMap<Integer, String> sharedVarIdSigMap;
+	@Expose
 	HashMap<Integer, String> stmtIdSigMap;
+	@Expose
 	HashMap<Integer, String> volatileAddresses;
-	
+	@Expose
 	HashSet<String> sharedAddresses = new HashSet<String>();
+	@Expose
 	HashSet<Long> threads = new HashSet<Long>();
+	@Expose
 	int num_br,num_sync,num_rw_shared,num_rw_local,num_w_init,num_prop;
 
 	public TraceInfo(HashMap<Integer, String> sharedVarIdSigMap2, 

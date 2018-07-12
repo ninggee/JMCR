@@ -23,6 +23,7 @@ import edu.illinois.imunit.internal.parsing.TokenMgrError;
 import edu.tamu.aser.mcr.ExploreSeedInterleavings;
 import edu.tamu.aser.mcr.trace.Trace;
 import edu.tamu.aser.rvinstrumentation.MCRProperties;
+import edu.tamu.aser.scheduling.strategy.MCRStrategy;
 
 /**
  * MCR runner for JUnit4 tests.
@@ -68,6 +69,9 @@ public class JUnit4MCRRunner extends BlockJUnit4ClassRunner {
                 while (Scheduler.canExecuteMoreSchedules()) {
                     Scheduler.startingScheduleExecution();
                     try {
+                        
+                       // System.out.println("getNewExplorationThread: "+ method );
+                       
                         JUnit4MCRRunner.super.runChild(method, wrappedNotifier);  //after choosen all the objects
                     } catch (Exception e) {
                         // TODO: handle exception
@@ -107,6 +111,7 @@ public class JUnit4MCRRunner extends BlockJUnit4ClassRunner {
      */
     @Override
     protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
+        System.out.println("run child called on :" + method);
         
         this.currentTestMethod = method;
         this.currentTestNotifier = notifier;
@@ -132,6 +137,8 @@ public class JUnit4MCRRunner extends BlockJUnit4ClassRunner {
      * @param notifier
      */
     private void exploreTest(FrameworkMethod method, RunNotifier notifier) {
+    	
+    	System.out.println("explore test on :" + method);
 
         stopOnFirstError = true;
         String stopOnFirstErrorString = MCRProperties.getInstance().getProperty(MCRProperties.STOP_ON_FIRST_ERROR_KEY);
@@ -211,6 +218,7 @@ public class JUnit4MCRRunner extends BlockJUnit4ClassRunner {
      * Helper method for collecting all the names and partial orders for the given test method.
      */
     private Map<String, Orderings> collectSchedules() {
+        System.out.println("collect shedule be called0");
         Map<String, Orderings> schedules = new HashMap<String, Orderings>();
         Schedules schsAnno = this.currentTestMethod.getAnnotation(Schedules.class);
         isDeadlockExpected = (this.currentTestMethod.getAnnotation(ExpectedDeadlock.class) != null);

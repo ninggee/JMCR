@@ -28,10 +28,12 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
 
 public class NotifyNode extends AbstractNode  implements ISyncNode{
-	
+	@Expose
 	private String sig_addr;
+	@Expose
 	private long waitTid;
 	public String getAddr(){
 		return sig_addr;

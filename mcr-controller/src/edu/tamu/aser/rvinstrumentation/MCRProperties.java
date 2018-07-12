@@ -40,6 +40,8 @@ public class MCRProperties extends Properties {
     /* Properties related property */
     public static final String PROPERTIES_KEY = "mcr.properties";
     public static final String DEFAULT_PROPERTIES = "/default.properties";
+    
+
 
     private static MCRProperties instance;
 

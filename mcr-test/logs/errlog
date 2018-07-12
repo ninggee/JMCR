@@ -831,3 +831,6 @@ client-0(http-server-socket-clients:1): caught ClientException: [org.w3c.jigsaw.
 client-0(http-server-socket-clients:1): caught ClientException: [org.w3c.jigsaw.http.ClientException] End Of File
 [http-server] shutdown inited...(save done)
 [http-server] shutdown completed at: Wed Jan 31 21:02:30 CST 2018.
+[http-server] started at: Thu May 31 21:36:01 CST 2018.
+[http-server] shutdown inited...(save done)
+[http-server] shutdown completed at: Thu May 31 21:36:42 CST 2018.

@@ -35,6 +35,8 @@ import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.Vector;
 
+import com.google.gson.annotations.Expose;
+
 /**
  * Representation of the execution trace. Each event is created as a node
  * with a corresponding type. Events are indexed by their thread Id, Type,
@@ -46,57 +48,78 @@ import java.util.Vector;
 public class Trace {
 
 	//rawfulltrace represents all the raw events in the global order
+	@Expose
 	Vector<AbstractNode> rawfulltrace = new Vector<AbstractNode>();
 	
 	//indexed by address, the set of read/write threads
 	//used to prune away local data accesses
+	@Expose
 	HashMap<String,HashSet<Long>> indexedReadThreads = new HashMap<String,HashSet<Long>>();
+	@Expose
 	HashMap<String,HashSet<Long>> indexedWriteThreads = new HashMap<String,HashSet<Long>>();
 
 	//the set of shared memory locations
+	@Expose
 	HashSet<String> sharedAddresses = new HashSet<String>();
 	//the set of threads
+	@Expose
 	HashSet<Long> threads = new HashSet<Long>();
 
 	//fulltrace represents all the critical events in the global order
+	@Expose
 	Vector<AbstractNode> fulltrace = new Vector<AbstractNode>();
-
+	
 	//keep a node GID to tid Map, used for generating schedules
+	@Expose
 	HashMap<Long, Long> nodeGIDTidMap = new HashMap<Long, Long>();
 	
 	//per thread node map
+	@Expose
 	HashMap<Long,Vector<AbstractNode>> threadNodesMap = new HashMap<Long,Vector<AbstractNode>>();
 	
 	//the first node and last node map of each thread
+	@Expose
 	HashMap<Long, AbstractNode> threadFirstNodeMap = new HashMap<Long, AbstractNode>();
+	@Expose
 	HashMap<Long, AbstractNode> threadLastNodeMap = new HashMap<Long, AbstractNode>();
 	
 	//per thread per lock lock/unlock pair
+	@Expose
 	HashMap<Long,HashMap<String,Vector<LockPair>>> threadIndexedLockPairs = new HashMap<Long,HashMap<String,Vector<LockPair>>>();
+	@Expose
 	HashMap<Long,Stack<ISyncNode>> threadSyncStack = new HashMap<Long,Stack<ISyncNode>>();
 
 	//per thread branch nodes and basicblock nodes
+	@Expose
 	HashMap<Long,Vector<BranchNode>> threadBranchNodes = new HashMap<Long,Vector<BranchNode>>();
+	@Expose
 	HashMap<Long,Vector<BBNode>> threadBBNodes = new HashMap<Long,Vector<BBNode>>();
 	
-	//per thead synchronization nodes
+	//per thread synchronization nodes
+	@Expose
 	HashMap<String,Vector<ISyncNode>> syncNodesMap = new HashMap<String,Vector<ISyncNode>>();	
 
 	//per address read and write nodes 
+	@Expose
 	HashMap<String,Vector<ReadNode>> indexedReadNodes = new HashMap<String,Vector<ReadNode>>();
+	@Expose
 	HashMap<String,Vector<WriteNode>> indexedWriteNodes = new HashMap<String,Vector<WriteNode>>();
 
 	//per address map from thread id to read/write nodes
+	@Expose
 	HashMap<String,HashMap<Long,Vector<IMemNode>>> indexedThreadReadWriteNodes = new HashMap<String,HashMap<Long,Vector<IMemNode>>>();
 
 	//per type per address property node map
+	@Expose
 	HashMap<String,HashMap<Integer,Vector<PropertyNode>>> propertyMonitors =  new HashMap<String,HashMap<Integer,Vector<PropertyNode>>>();
+	@Expose
 	HashMap<Long,Vector<PropertyNode>> threadPropertyNodes =  new HashMap<Long,Vector<PropertyNode>>();
 
 	//per address initial write value
+	@Expose
 	HashMap<String,String> initialWriteValueMap = new HashMap<String,String>();
 	
-	
+	@Expose
 	TraceInfo info;
 	
 	public static String appname;

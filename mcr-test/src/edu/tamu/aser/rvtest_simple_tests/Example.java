@@ -21,7 +21,14 @@ public class Example {
 			@Override
 			public void run() {
 				int b = x;
-				y = 1;
+				if (x == 0) {
+					y = 2;
+				} else {
+					y = 1;
+				}
+//				y = 1;
+				
+				System.out.println("b:" + b);
 			}
 		});
 
@@ -29,12 +36,15 @@ public class Example {
 
 		int a = y;
 		x = 1;
+		
+
 
 		try {
 			t1.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		System.out.println("a:" + a); 
 	}
 
 	@Test

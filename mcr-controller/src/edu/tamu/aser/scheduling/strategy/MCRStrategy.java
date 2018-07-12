@@ -1,6 +1,7 @@
 package edu.tamu.aser.scheduling.strategy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -11,9 +12,15 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import edu.tamu.aser.mcr.StartExploring;
 import edu.tamu.aser.mcr.config.Configuration;
+import edu.tamu.aser.mcr.trace.AbstractNode;
 import edu.tamu.aser.mcr.trace.Trace;
 import edu.tamu.aser.mcr.trace.TraceInfo;
 import edu.tamu.aser.rvinstrumentation.MCRProperties;
@@ -68,8 +75,22 @@ public class MCRStrategy extends SchedulingStrategy {
 	 */
 	@Override
 	public void startingScheduleExecution() {
-	    
 		List<String> prefix = this.toExplore.poll();
+		
+		if (MCRStrategy.choicesMade.isEmpty()) {
+			 String[] choices =  {"0", "0", "0", "0", "0", "0", "0", "3", "1", "0", "0", "0", "1", "0", "3", "3", "2", "0", "0", "0",
+			 "3", "4", "4", "4", "4", "4", "1", "2", "4", "2", "1", "0", "2", "2", "2", "0", "0", "0", "0", "0", "0"};
+			//String[] choices = {"0", "0", "0", "0", "0", "0", "0", "1", "0", "0", "2", "0", "2", "1", "0", "2", "2", "1", "0",
+			//        "1", "2", "4", "0", "0", "3", "2", "4", "0", "3", "4", "0", "3", "4", "3", "0", "4", "0", "4", "0", "0", "0" };
+		
+
+
+		    
+		    
+		    for (String choice : choices ) {
+		        MCRStrategy.schedulePrefix.add(choice);
+		    }
+		}
 		if (!MCRStrategy.choicesMade.isEmpty()) {   // when not empty
 			MCRStrategy.choicesMade.clear();
 			MCRStrategy.schedulePrefix = new ArrayList<String>();
@@ -105,6 +126,7 @@ public class MCRStrategy extends SchedulingStrategy {
 	}
 
 	int i  = 0 ;
+	
 	public void completedScheduleExecution() {
 		this.notYetExecutedFirstSchedule = false;
 
@@ -137,7 +159,9 @@ public class MCRStrategy extends SchedulingStrategy {
 	 */
 
 	private void executeSingleThread(Vector<String> prefix) {
-	    
+
+	 
+	   
 	    currentTrace.getTraceInfo().updateIdSigMap( RVGlobalStateForInstrumentation.stmtIdSigMap );   //solving the first trace initialization problem
 	    
 		StartExploring causalTrace = new StartExploring(currentTrace, prefix, this.toExplore);
@@ -149,7 +173,8 @@ public class MCRStrategy extends SchedulingStrategy {
 			e.printStackTrace();
 		}
 	}
-
+	
+	
 	@SuppressWarnings("unused")
     private void executeMultiThread(Trace trace, Vector<String> prefix) {
 
@@ -188,6 +213,7 @@ public class MCRStrategy extends SchedulingStrategy {
 	 */
 	public Object choose(SortedSet<? extends Object> objectChoices,
 			ChoiceType choiceType) {
+//	    System.err.println("choose be called");
 		/*
 		 * Initialize choice
 		 */
@@ -244,6 +270,9 @@ public class MCRStrategy extends SchedulingStrategy {
 		        MCRStrategy.choicesMade.add(chosenIndex);
 		                
 		        this.previousThreadInfo = (ThreadInfo) chosenObject;
+		        MCRStrategy.choicesMade.add(chosenIndex);
+//		        Gson g = new Gson();
+//		        System.out.println(g.toJson(MCRStrategy.schedulePrefix));
                 return chosenObject;
             }
 			
@@ -269,6 +298,8 @@ public class MCRStrategy extends SchedulingStrategy {
 		}
 		
 		MCRStrategy.choicesMade.add(chosenIndex);
+//		Gson g = new Gson();
+//		System.out.println(g.toJson(MCRStrategy.schedulePrefix));
         		
 		this.previousThreadInfo = (ThreadInfo) chosenObject;
 		

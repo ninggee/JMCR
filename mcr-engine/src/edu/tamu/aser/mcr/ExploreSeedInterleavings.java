@@ -16,6 +16,10 @@ import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.Collections;
 
 import edu.tamu.aser.mcr.config.Configuration;
@@ -79,7 +83,7 @@ public class ExploreSeedInterleavings {
 	 * The method for generating causally different schedules. 
 	 * Each schedule enforces a read to be matched with a write that writes
 	 * a different value.
-	 * @param engine
+	 * @param PPngine
 	 * @param trace
 	 * @param schedule_prefix
 	 */
@@ -170,6 +174,9 @@ public class ExploreSeedInterleavings {
 					if (!mValuesPrefixes.isEmpty()) {
 						vReadValuePrefixes.add(mValuesPrefixes);
 					}					
+					
+					
+//					for(HashMap<K, V>)
 				} //end for check read write
 			}
 		}  //end while
@@ -255,6 +262,7 @@ public class ExploreSeedInterleavings {
 		}
 	}
 	
+
 	
 	private static boolean checkInitial(ConstraintsBuildEngine engine, Trace trace,
 			Vector<String> schedule_prefix, Vector<WriteNode> writenodes,
@@ -280,6 +288,9 @@ public class ExploreSeedInterleavings {
 		StringBuilder sb2 = engine.constructReadInitWriteConstraints(rnode,depNodes, writenodes);
 
 		sb.append(sb2);		
+
+		// System.out.println(sb);
+
 		//@alan
 		//adding rnode.getGid() as a parameter
 		Vector<String> schedule = engine.generateSchedule(sb,rnode.getGID(),rnode.getGID(),isfulltrace?schedule_prefix.size():0);
@@ -302,6 +313,24 @@ public class ExploreSeedInterleavings {
 			
 		}
 		return false;
+	}
+
+	/**
+	 * prevent a memory pattern happen in a new trace
+	 * so the trace should statisfy happens-before realtionship in a thread
+	 * and lock mutual exlusion realtionship
+	 * and don't allow the given pattern appear in the new trace
+	 */
+	private static void stopPattern(
+		ConstraintsBuildEngine engine, 
+		Trace trace) {
+		// StringBuilder sb = engine.constructFeasibilityConstraints(trace, depNodes, readDepNodes, cur_rnode, wnode);
+		HashSet<AbstractNode> depNodes = new HashSet<>(trace.getFullTrace());
+		engine.constructPOConstraints(trace, depNodes);
+		engine.constructSyncConstraints(trace, depNodes);
+
+		System.out.println("call 2");
+		engine.generateSchedule2(new StringBuilder());
 	}
 
 	/**
@@ -394,7 +423,7 @@ public class ExploreSeedInterleavings {
 
 					Vector<String> schedule = 
 							engine.generateSchedule(sb,rnode.getGID(), wnode.getGID(),isfulltrace?schedule_prefix.size():0);
-					
+										
 					//each time compute a causal schedule, record the information of #read, #constraints, time
 					output = output + Long.toString(Configuration.numReads) + " " +
 							Long.toString(Configuration.rwConstraints) + " " +
@@ -693,8 +722,10 @@ public class ExploreSeedInterleavings {
 				
 				schedule_a.add(name);
 			}
-				
-			//debugging
+			
+//			Gson g = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+//			System.out.println(g.toJson(trace));
+//			//debugging
 //			System.out.println("prefix: " + schedule_a);
 			
 			if(!isfulltrace) {
@@ -703,10 +734,10 @@ public class ExploreSeedInterleavings {
 			} else {
 				//System.out.println(" USING FULL TRACE************");
 			}
-//			System.out.println("causal schedule: " + schedule_a);
+			// System.out.println("causal schedule: " + schedule_a);
 			schedules.add(schedule_a);
 			
-			if(Configuration.DEBUG)
+			if(!Configuration.DEBUG)
 			{
 				//report the schedules
 				String msg_header = "************* causal schedule "+(++schedule_id)+" **************\n";
@@ -790,6 +821,7 @@ public class ExploreSeedInterleavings {
 		//OPT: if #sv==0 or #shared rw ==0 continue	
 		if(trace.hasSharedVariable())
 		{
+			System.out.println("call stop pattern");
 			initPrinter(trace.getApplicationName());
 			
 			//engine is used for constructing constraints model
@@ -799,9 +831,15 @@ public class ExploreSeedInterleavings {
 			//build the initial happen before relation for some optimization
 			engine.preprocess(trace);
 		
-			//generate causal prefixes
-			genereteCausallyDifferentSchedules(engine,trace,schedule_prefix);
 			
+			//generate causal prefixes
+			//genereteCausallyDifferentSchedules(engine,trace,schedule_prefix);
+
+			engine.constructPOConstraints(trace, new HashSet<>(trace.getFullTrace()));
+			engine.constructSyncConstraints(trace, new HashSet<>(trace.getFullTrace()));
+			System.out.println("call stop pattern");
+			stopPattern(engine, trace);
+			System.out.println("end");
 		}		
 	}
 	

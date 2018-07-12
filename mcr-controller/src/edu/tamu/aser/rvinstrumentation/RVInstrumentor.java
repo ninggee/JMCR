@@ -220,16 +220,16 @@ public class RVInstrumentor {
                         }
                         
                         // output new class files after instrumenting classes
-//                        
-//                        try {
-//                            File file =  new File("D:/MCR/" + name.replace("/", "."));
-//                          
-//                            FileOutputStream fout = new FileOutputStream(file);
-//                            fout.write(bytes);
-//                            fout.close();
-//                        } catch(IOException e) {
-//                            e.printStackTrace();
-//                        }
+                       
+                       try {
+                           File file =  new File("D:/MCR/" + name.replace("/", "."));
+                         
+                           FileOutputStream fout = new FileOutputStream(file);
+                           fout.write(bytes);
+                           fout.close();
+                       } catch(IOException e) {
+                           e.printStackTrace();
+                       }
                         
                     }
                 } catch (Throwable th) {

@@ -18,7 +18,7 @@ public class Configuration {
 	 * @author Alan
 	 */
 	public static String mode = "SC";  //default: SC
-	public static boolean DEBUG = false;
+	public static boolean DEBUG = true;
 	public static Map<Integer, Set<Integer>> SDG = null;
 	public static ReachabilityEngine reachSDG = null;
 	public static Map<String, Integer> mapNodeLabelToId = null;

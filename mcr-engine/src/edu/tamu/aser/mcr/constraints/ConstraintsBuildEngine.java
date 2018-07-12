@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.gson.Gson;
 import com.sun.org.apache.xerces.internal.util.EntityResolver2Wrapper;
 
 /**
@@ -103,7 +104,7 @@ public class ConstraintsBuildEngine
 	 * @param depNodes 
 	 */
 	public void constructPOConstraintsRMM(Trace trace, HashSet<AbstractNode> depNodes){	
-		
+		System.out.println("constructPOConstraintsRMM be called");
 		CONS_ASSERT_PO = new StringBuilder("");
 
 		//get needed data structure
@@ -281,6 +282,7 @@ public class ConstraintsBuildEngine
 									
 				}
 			}//end constraining w-w
+			// System.out.println(CONS_ASSERT_PO);
 		}
 		
 		
@@ -1154,6 +1156,7 @@ public class ConstraintsBuildEngine
 			}
 		}
 		
+		
 	}
 	
 	/**
@@ -1255,6 +1258,7 @@ public class ConstraintsBuildEngine
 		}
 		
 
+		
 		return new StringBuilder("(assert "+CONS_CAUSAL_RW+")\n\n");
 
 	}
@@ -1380,10 +1384,31 @@ public class ConstraintsBuildEngine
 		 */
 		declareVariables(CONS_ASSERT_PO.append(causalConstraint).append(CONS_ASSERT_VALID));
 				
-		StringBuilder msg = new StringBuilder(CONS_SETLOGIC).append(CONS_DECLARE).append(CONS_ASSERT_VALID).append(CONS_ASSERT_PO).append(causalConstraint).append(CONS_GETMODEL);	
+		StringBuilder msg = new StringBuilder(CONS_SETLOGIC).append(CONS_DECLARE).append(CONS_ASSERT_VALID).append(CONS_ASSERT_PO).append(causalConstraint).append(CONS_GETMODEL);
+
 		task.sendMessage(msg.toString(),makeVariable(gid),makeVariable(wgid), makeVariable(gid_prefix),reachEngine, causalConstraint.toString(), config);
+
 		
 		return task.schedule;
+	}
+
+	public void generateSchedule2(StringBuilder causalConstraint) {
+		id.incrementAndGet();
+		ConstraintsSolving task = new ConstraintsSolving(config, id.get());
+		declareVariables(CONS_ASSERT_PO.append(causalConstraint).append(CONS_ASSERT_VALID));
+		StringBuilder CON_PEREVENT = new StringBuilder();
+		CON_PEREVENT.append("(assert (or (> x15 x24) (> x24 x16)))\n");
+		CON_PEREVENT.append("(assert (or (> x15 x30) (> x30 x16)))\n");	
+		CON_PEREVENT.append("(assert (or (> x15 x34) (> x34 x16)))\n");	
+		CON_PEREVENT.append("(assert (or (> x17 x24) (> x24 x30)))\n");
+		CON_PEREVENT.append("(assert (or (> x17 x16) (> x16 x30)))\n");
+		CON_PEREVENT.append("(assert (or (> x17 x34) (> x34 x30)))\n");
+
+		StringBuilder msg = new StringBuilder(CONS_SETLOGIC).append(CONS_DECLARE).append(CONS_ASSERT_VALID).append(CONS_ASSERT_PO).append(CON_PEREVENT).append(causalConstraint).append(CONS_GETMODEL);
+		System.out.println(msg);
+		System.out.println("call msg");
+		task.sendMessage(msg.toString());
+		
 	}
 	
 	
@@ -1423,6 +1448,7 @@ public class ConstraintsBuildEngine
 				//
 				if(partialOrderMap.containsKey(node))
 				{
+					//specialDepentNodesMap就是一个缓存
 					HashSet<AbstractNode> depNodes2 = specialDependentNodesMap.get(node);
 					if(depNodes2==null)
 					{
@@ -1451,6 +1477,7 @@ public class ConstraintsBuildEngine
 //					}
 //				}
 
+				//thread里面，他之前的node都是相关的node
 				depNodes.add(node);//depends on the memory model			
 			}
 			
@@ -1566,7 +1593,8 @@ public class ConstraintsBuildEngine
 					{
 						long fGID = fnode.getGID();					
 						//start-begin ordering
-						reachEngine.addEdge(thisGID, fGID);					
+						reachEngine.addEdge(thisGID, fGID);	
+						//添加一个start node 到被启动线程的第一个node 的边 
 					}
 					
 					//add join to partial order map
@@ -1582,6 +1610,7 @@ public class ConstraintsBuildEngine
 						long lGID = lnode.getGID();						
 						//end-join ordering
 						reachEngine.addEdge(lGID,thisGID);
+						//添加一条线程的最后一个node到join这个线程的边
 
 					}
 					
@@ -1601,7 +1630,8 @@ public class ConstraintsBuildEngine
 					
 					stack.push(node);	
 					
-					//
+					//TODO ？ 这里不理解是什么意思 
+					
 					if (unPairedUnlock && !tidSet.contains(node.getTid())) {
 						partialOrderMap.put((AbstractNode) node, unPairedLockNode);
 						tidSet.add(node.getTid());
@@ -1732,10 +1762,12 @@ public class ConstraintsBuildEngine
 								if(wnode!=null)
 								{
 									Vector<AbstractNode> threadNodes = trace.getThreadNodesMap().get(wnode.getTid());
+									//在wait node后面一定会跟着一个lock node
 									int lockNodeIndex = threadNodes.indexOf(wnode)+1;
 									//there must be a lock node following the waitnode
 									AbstractNode lockNode = threadNodes.get(lockNodeIndex);
 									
+									//如果找不到，就说明trace有问题
 									if(!(lockNode instanceof LockNode))
 										System.err.println("trace collection is wrong");
 									

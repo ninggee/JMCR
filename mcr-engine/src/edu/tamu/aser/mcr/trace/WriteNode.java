@@ -28,11 +28,16 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
+
 public class WriteNode extends AbstractNode implements IMemNode
 {
+	@Expose
 	private long prevSyncId,prevBranchId;
 
+	@Expose
 	private String value;
+	@Expose
 	private String addr;
 	private String label;
 	

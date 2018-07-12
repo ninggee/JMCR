@@ -28,8 +28,10 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
+
 public class StartNode extends AbstractNode implements ISyncNode{
-	
+	@Expose
 	private String tid_child;
 	
 	public String getAddr()

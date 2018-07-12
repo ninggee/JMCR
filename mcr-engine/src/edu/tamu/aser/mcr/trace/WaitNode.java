@@ -28,8 +28,10 @@
  ******************************************************************************/
 package edu.tamu.aser.mcr.trace;
 
+import com.google.gson.annotations.Expose;
+
 public class WaitNode extends AbstractNode  implements ISyncNode {
-	
+	@Expose
 	private String sig_addr;
 
 	public String getAddr()
